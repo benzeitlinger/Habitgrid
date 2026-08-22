@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ColorGrid } from '@/components/ColorGrid';
 import { Icon } from '@/components/Icon';
@@ -8,6 +8,7 @@ import { IconPicker } from '@/components/IconPicker';
 import { Segmented } from '@/components/Segmented';
 import { Field, Hint, Sheet } from '@/components/Sheet';
 import { DEFAULT_ICON } from '@/icons';
+import { confirmDestructive } from '@/lib/dialog';
 import { closeSheet } from '@/lib/nav';
 import { useCategories, useHabit, useStore } from '@/store/habits';
 import type { Habit, Polarity, StreakGoal, TrackingType } from '@/store/types';
@@ -83,19 +84,16 @@ export default function HabitSheet() {
     closeSheet(router);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!existing) return;
-    Alert.alert('Delete habit?', `"${existing.name}" and all its history will be removed.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          removeHabit(existing.id);
-          closeSheet(router);
-        },
-      },
-    ]);
+    const ok = await confirmDestructive(
+      'Delete habit?',
+      `"${existing.name}" and all its history will be removed.`,
+      'Delete'
+    );
+    if (!ok) return;
+    removeHabit(existing.id);
+    closeSheet(router);
   };
 
   const dayLabel = isQuit ? 'Allowed Per Day' : 'Completions Per Day';

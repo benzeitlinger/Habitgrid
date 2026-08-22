@@ -6,3 +6,4 @@ web-build/
 .DS_Store
 public/seed.json
 scripts/seed.json
+public/backup-fixture.json
