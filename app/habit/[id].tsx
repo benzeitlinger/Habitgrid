@@ -316,6 +316,7 @@ export default function HabitSheet() {
                   closeSheet(router);
                 }}
                 accessibilityRole="button"
+                accessibilityLabel={existing.archived ? 'Restore Habit' : 'Archive Habit'}
                 style={styles.rowButton}
               >
                 <Icon name={existing.archived ? 'ui-restore' : 'ui-archive'} size={20} color={colors.textPrimary} />
@@ -326,6 +327,7 @@ export default function HabitSheet() {
               <Pressable
                 onPress={confirmDelete}
                 accessibilityRole="button"
+                accessibilityLabel="Delete Habit"
                 style={styles.rowButton}
               >
                 <Icon name="ui-trash" size={20} color={colors.danger} />

@@ -85,6 +85,10 @@ Der Import ersetzt *alles*. `parseBackup()` ist deshalb absichtlich streng und
 bricht bei einer beschädigten Datei mit einer Meldung ab, statt halb zu
 importieren.
 
+Zwei Wege führen hinein: **Import from file** über den Datei-Dialog, und
+**Import pasted text** für Umgebungen ohne Datei-Dialog — dort öffnest du das
+Backup in einem Editor und fügst es ins Textfeld ein.
+
 ## Aufbau
 
 ```
@@ -114,6 +118,11 @@ src/
   eingebetteter Host kann `localStorage` verweigern; der Adapter fällt dann auf
   den Arbeitsspeicher zurück und die App zeigt einen roten Banner, statt still
   Daten zu verlieren.
+- **Dialoge:** nie `Alert.alert`, `window.confirm` oder `window.alert`, immer
+  `src/lib/dialog.tsx`. `Alert.alert` ist auf react-native-web eine leere
+  Funktion, und ein sandboxed iframe ohne `allow-modals` lässt `window.confirm`
+  stillschweigend `false` zurückgeben — eine Bestätigung sieht dann aus wie ein
+  Nein. Der In-App-Dialog verhält sich überall gleich.
 
 ## Tests
 

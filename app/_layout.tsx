@@ -4,6 +4,7 @@ import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DialogHost } from '@/lib/dialog';
 import { colors } from '@/theme';
 
 export default function RootLayout() {
@@ -23,6 +24,7 @@ export default function RootLayout() {
           <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
           <Stack.Screen name="habit/[id]" options={{ presentation: 'modal' }} />
         </Stack>
+        <DialogHost />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

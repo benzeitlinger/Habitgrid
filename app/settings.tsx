@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Icon } from '@/components/Icon';
 import { SettingsGroup, SettingsRow } from '@/components/SettingsRow';
@@ -16,6 +16,10 @@ import { Segmented } from '@/components/Segmented';
 import { ColorGrid } from '@/components/ColorGrid';
 
 type Page = 'root' | 'general' | 'theme' | 'archived' | 'data' | 'reorder';
+
+function count(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`;
+}
 
 const TINTS = {
   general: '#EC4899',
@@ -187,6 +191,22 @@ function Data() {
   const replaceAll = useStore((s) => s.replaceAll);
   const habits = useStore((s) => s.habits);
   const [busy, setBusy] = useState(false);
+  const [pasted, setPasted] = useState('');
+
+  /** Shared tail of both import routes: validate, confirm, replace. */
+  const applyBackup = async (text: string) => {
+    const data = parseBackup(text);
+    const ok = await confirmDestructive(
+      'Replace everything?',
+      `This backup has ${count(data.habits.length, 'habit')}. Importing removes ` +
+        `the ${count(habits.length, 'habit')} currently in the app.`,
+      'Import'
+    );
+    if (!ok) return false;
+    replaceAll(data);
+    await notify('Imported', `${count(data.habits.length, 'habit')} restored.`);
+    return true;
+  };
 
   const doExport = async () => {
     setBusy(true);
@@ -210,15 +230,20 @@ function Data() {
       const text = await pickTextFile();
       if (text === null) return;
       setBusy(true);
-      const data = parseBackup(text);
-      const ok = await confirmDestructive(
-        'Replace everything?',
-        `This backup has ${data.habits.length} habits. Importing removes the ${habits.length} habits currently in the app.`,
-        'Import'
-      );
-      if (ok) replaceAll(data);
+      await applyBackup(text);
     } catch (e) {
       notify('Import failed', e instanceof BackupError ? e.message : 'That file could not be read.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doPasteImport = async () => {
+    setBusy(true);
+    try {
+      if (await applyBackup(pasted)) setPasted('');
+    } catch (e) {
+      notify('Import failed', e instanceof BackupError ? e.message : 'That text could not be read.');
     } finally {
       setBusy(false);
     }
@@ -250,7 +275,38 @@ function Data() {
         style={[styles.bigButton, busy && styles.dim]}
       >
         <Icon name="ui-import" size={22} color={colors.textPrimary} />
-        <Text style={styles.bigButtonText}>Import</Text>
+        <Text style={styles.bigButtonText}>Import from file</Text>
+      </Pressable>
+
+      <View style={styles.rule} />
+
+      <Text style={styles.body}>
+        No file picker here? Open the backup in any text editor, copy everything, and paste it
+        below.
+      </Text>
+
+      <TextInput
+        value={pasted}
+        onChangeText={setPasted}
+        placeholder='{"format":"habitkit-clone", ...}'
+        placeholderTextColor={colors.textTertiary}
+        accessibilityLabel="Backup text"
+        multiline
+        numberOfLines={5}
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={styles.textArea}
+      />
+
+      <Pressable
+        onPress={doPasteImport}
+        disabled={busy || pasted.trim().length === 0}
+        accessibilityRole="button"
+        accessibilityLabel="Import pasted text"
+        style={[styles.bigButton, (busy || pasted.trim().length === 0) && styles.dim]}
+      >
+        <Icon name="ui-import" size={22} color={colors.textPrimary} />
+        <Text style={styles.bigButtonText}>Import pasted text</Text>
       </Pressable>
     </View>
   );
@@ -331,6 +387,18 @@ const styles = StyleSheet.create({
     paddingVertical: 17,
   },
   bigButtonText: { color: colors.textPrimary, fontSize: 17, fontWeight: '700' },
+  rule: { height: 1, backgroundColor: colors.border, marginVertical: 4 },
+  textArea: {
+    minHeight: 110,
+    backgroundColor: colors.bg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    color: colors.textPrimary,
+    fontSize: 13,
+    textAlignVertical: 'top',
+  },
   secondaryButton: { alignItems: 'center', paddingVertical: 14 },
   secondaryText: { color: colors.textSecondary, fontSize: 15, fontWeight: '600' },
   preview: {
