@@ -9,7 +9,8 @@ export type Polarity = 'build' | 'quit';
 
 export type TrackingType = 'step' | 'custom';
 
-export type StreakGoal = { count: number; period: 'week' | 'month' };
+/** `day` counts consecutive days; `week`/`month` count whole periods that hit `count`. */
+export type StreakGoal = { count: number; period: 'day' | 'week' | 'month' };
 
 export type Habit = {
   id: string;

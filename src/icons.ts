@@ -69,6 +69,10 @@ export const ICONS: Record<string, IconDef> = {
   checkbox: { set: 'ion', name: 'checkbox-outline' },
   pray: { set: 'mci', name: 'hand-heart' },
   tag: { set: 'ion', name: 'pricetag-outline' },
+  edit: { set: 'ion', name: 'create-outline' },
+  glass: { set: 'mci', name: 'glass-mug-variant' },
+  xsocial: { set: 'mci', name: 'twitter' },
+  diamond: { set: 'mci', name: 'diamond-stone' },
 
   // UI chrome. Not offered in the habit picker (see ICON_KEYS below).
   'ui-settings': { set: 'ion', name: 'settings-outline' },

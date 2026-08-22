@@ -6,7 +6,8 @@ import { Icon } from '@/components/Icon';
 import { SettingsGroup, SettingsRow } from '@/components/SettingsRow';
 import { Field, Sheet } from '@/components/Sheet';
 import { DeclinedError } from '@/lib/artifactHost';
-import { backupFilename, BackupError, buildBackup, parseBackup } from '@/lib/backup';
+import { backupFilename, BackupError, buildBackup } from '@/lib/backup';
+import { HabitKitImportError, parseAnyBackup } from '@/lib/import/detect';
 import { pickTextFile, shareTextFile } from '@/lib/dataFile';
 import { confirmDestructive, notify } from '@/lib/dialog';
 import { closeSheet } from '@/lib/nav';
@@ -19,6 +20,12 @@ type Page = 'root' | 'general' | 'theme' | 'archived' | 'data' | 'reorder';
 
 function count(n: number, noun: string): string {
   return `${n} ${noun}${n === 1 ? '' : 's'}`;
+}
+
+/** Show the parser's own wording; only fall back for genuinely unexpected errors. */
+function messageFor(e: unknown, kind: 'file' | 'text'): string {
+  if (e instanceof BackupError || e instanceof HabitKitImportError) return e.message;
+  return `That ${kind} could not be read.`;
 }
 
 const TINTS = {
@@ -193,18 +200,26 @@ function Data() {
   const [busy, setBusy] = useState(false);
   const [pasted, setPasted] = useState('');
 
-  /** Shared tail of both import routes: validate, confirm, replace. */
+  /** Shared tail of both import routes: detect the format, confirm, replace. */
   const applyBackup = async (text: string) => {
-    const data = parseBackup(text);
+    const { source, data, note } = parseAnyBackup(text);
+    const from = source === 'habitkit' ? 'This HabitKit export' : 'This backup';
+    const days = Object.values(data.entries).reduce((n, e) => n + Object.keys(e).length, 0);
+
     const ok = await confirmDestructive(
       'Replace everything?',
-      `This backup has ${count(data.habits.length, 'habit')}. Importing removes ` +
-        `the ${count(habits.length, 'habit')} currently in the app.`,
+      `${from} has ${count(data.habits.length, 'habit')} and ${count(days, 'logged day')}. ` +
+        `Importing removes the ${count(habits.length, 'habit')} currently in the app.`,
       'Import'
     );
     if (!ok) return false;
+
     replaceAll(data);
-    await notify('Imported', `${count(data.habits.length, 'habit')} restored.`);
+    await notify(
+      'Imported',
+      `${count(data.habits.length, 'habit')} and ${count(days, 'logged day')} restored.` +
+        (note ? `\n\n${note}` : '')
+    );
     return true;
   };
 
@@ -232,7 +247,7 @@ function Data() {
       setBusy(true);
       await applyBackup(text);
     } catch (e) {
-      notify('Import failed', e instanceof BackupError ? e.message : 'That file could not be read.');
+      notify('Import failed', messageFor(e, 'file'));
     } finally {
       setBusy(false);
     }
@@ -243,7 +258,7 @@ function Data() {
     try {
       if (await applyBackup(pasted)) setPasted('');
     } catch (e) {
-      notify('Import failed', e instanceof BackupError ? e.message : 'That text could not be read.');
+      notify('Import failed', messageFor(e, 'text'));
     } finally {
       setBusy(false);
     }
@@ -253,7 +268,8 @@ function Data() {
     <View style={{ gap: 14 }}>
       <Text style={styles.body}>
         Your habits live only on this device. Export regularly — a backup file is the only way to
-        get them back.
+        get them back. Import takes a backup from this app or a HabitKit export; it works out
+        which is which.
       </Text>
 
       <Pressable

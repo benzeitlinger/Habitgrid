@@ -89,7 +89,22 @@ describe('goodDays / completionRate', () => {
     expect(trackedDays(h, 2026)).toBe(3); // 20th, 21st, 22nd
     const e = { '2026-08-20': 1, '2026-07-15': 1 }; // the July entry predates it
     expect(goodDays(h, e, 2026)).toBe(1);
+    // An entry older than the habit must not stretch the denominator backwards.
     expect(completionRate(h, e, 2026)).toBe(33);
+  });
+
+  it('measures a build rate from the first logged day of the year', () => {
+    // Matches HabitKit: created in January, first logged in August.
+    const h = habit({ createdAt: '2026-01-01' });
+    const e = { '2026-08-20': 1, '2026-08-21': 1 };
+    expect(goodDays(h, e, 2026)).toBe(2);
+    expect(trackedDays(h, 2026)).toBe(234);
+    expect(completionRate(h, e, 2026)).toBe(66); // 2 of the 3 days since the 20th
+  });
+
+  it('truncates the rate rather than rounding it up', () => {
+    const h = habit({ createdAt: '2026-08-20' });
+    expect(completionRate(h, { '2026-08-20': 1, '2026-08-21': 1 }, 2026)).toBe(66);
   });
 
   it('is 100% for a quit habit that was never broken', () => {

@@ -89,6 +89,43 @@ Zwei Wege führen hinein: **Import from file** über den Datei-Dialog, und
 **Import pasted text** für Umgebungen ohne Datei-Dialog — dort öffnest du das
 Backup in einem Editor und fügst es ins Textfeld ein.
 
+Beide erkennen selbst, ob es ein Backup dieser App oder ein **HabitKit-Export**
+ist (`src/lib/import/detect.ts`).
+
+### HabitKit-Import
+
+`src/lib/import/habitkit.ts` liest das Original-Format. Drei Dinge, die dabei
+zählen:
+
+- HabitKit speichert jede Completion als UTC **plus** den Offset, der beim
+  Eintragen galt: `2025-07-14T22:00:00Z` mit Offset 120 ist lokal schon der
+  15. Ohne diese Korrektur rutscht die halbe Historie einen Tag zurück.
+- Ein Habit kann mehrere `intervals` haben. Maßgeblich ist das offene
+  (`endDate: null`), sonst das zuletzt begonnene.
+- HabitKits Voreinstellungs-Kategorien kommen alle mit, auch ungenutzte. Der
+  Import behält nur die, unter denen wirklich etwas liegt.
+
+**Kalibrierung.** `scripts/verify-import.mjs` prüft den Import gegen die
+Zahlen, die das Original am 22.08.2026 anzeigte:
+
+```bash
+node scripts/verify-import.mjs ../habitkit_export.json
+```
+
+Alle fünf Referenzwerte stimmen überein: 422 Completed Days, 68 %
+Completion Rate, „3 min Journal" 53 Completions und 30 %, Best Streak 11.
+
+Dabei kam heraus, dass HabitKit die Rate anders rechnet als ursprünglich
+angenommen — und gesamt anders als pro Habit:
+
+| | Formel |
+|---|---|
+| Gesamt | Tage mit mindestens einem Häkchen ÷ vergangene Tage des Jahres |
+| Pro Habit | gute Tage ÷ Tage seit dem ersten Eintrag **in diesem Jahr** |
+
+Beides wird abgeschnitten, nicht gerundet. `src/lib/stats.ts` bildet das nach,
+damit die Zahlen nach dem Umstieg dieselben bleiben.
+
 ## Aufbau
 
 ```
