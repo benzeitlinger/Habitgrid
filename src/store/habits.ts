@@ -1,9 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { useShallow } from 'zustand/react/shallow';
 
 import { todayKey, type DateKey } from '@/lib/date';
+import { storage } from '@/store/storage';
 import { DEFAULT_SETTINGS, type AppData, type Category, type Habit, type Settings } from '@/store/types';
 
 export const STORAGE_KEY = 'habitkit-store-v1';
@@ -140,7 +140,7 @@ export const useStore = create<State>()(
     }),
     {
       name: STORAGE_KEY,
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => storage),
       partialize: ({ habits, categories, entries, settings }) => ({
         habits,
         categories,

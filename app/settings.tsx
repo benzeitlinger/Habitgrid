@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Icon } from '@/components/Icon';
 import { SettingsGroup, SettingsRow } from '@/components/SettingsRow';
 import { Field, Sheet } from '@/components/Sheet';
+import { DeclinedError } from '@/lib/artifactHost';
 import { backupFilename, BackupError, buildBackup, parseBackup } from '@/lib/backup';
 import { pickTextFile, shareTextFile } from '@/lib/dataFile';
 import { confirmDestructive, notify } from '@/lib/dialog';
@@ -192,7 +193,10 @@ function Data() {
     try {
       await shareTextFile(backupFilename(), JSON.stringify(buildBackup(exportData()), null, 2));
     } catch (e) {
-      notify('Export failed', e instanceof Error ? e.message : 'Unknown error.');
+      // Cancelling the save prompt is a normal outcome, not a failure.
+      if (!(e instanceof DeclinedError)) {
+        notify('Export failed', e instanceof Error ? e.message : 'Unknown error.');
+      }
     } finally {
       setBusy(false);
     }

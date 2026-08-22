@@ -51,6 +51,29 @@ Eine einzige Funktion, `isGoodDay()` in [`src/lib/stats.ts`](src/lib/stats.ts),
 entscheidet das für beide Fälle. Heatmap, Streak, Rate und Chart lesen
 ausschließlich diese Funktion.
 
+## Web-Version (online, ohne Mac)
+
+```bash
+npx expo export --platform web --output-dir dist
+node scripts/bundle-single-file.mjs dist/habit-grid.html
+```
+
+Das packt den ganzen Build in **eine** HTML-Datei — Fonts und Bilder als
+data:-URIs —, die sich als Claude-Artifact veröffentlichen lässt. Zwei Dinge
+macht das Script dabei, ohne die es nicht funktioniert:
+
+- Der Build setzt `experiments.baseUrl` auf den Platzhalter `/__HK_BASE__`.
+  Das Script ersetzt das Literal durch `window.__HK_BASE__`, das beim Laden aus
+  `location.pathname` berechnet wird. Sonst wäre die Datei an genau einen Pfad
+  gebunden — und die URL steht erst nach dem Veröffentlichen fest.
+- Es pinnt die Adresszeile. expo-router würde sonst `/settings` und `/stats`
+  in die History schieben, und ein Reload dort liefert auf einem statischen
+  Host einen 404.
+
+Im Artifact-Viewer sind normale Download-Links wirkungslos, deshalb geht der
+Export dort über die `downloads`-Capability (`src/lib/artifactHost.ts`) und
+fällt außerhalb auf einen normalen Link zurück.
+
 ## Backups
 
 Die Daten liegen nur im App-Storage. Wird Expo Go gelöscht, sind sie weg.
@@ -87,6 +110,10 @@ src/
   durch `useShallow` — sonst rendert die Komponente endlos. Dafür gibt es die
   fertigen Hooks `useVisibleHabits()`, `useCategories()` usw. in
   `src/store/habits.ts`.
+- **Speicher:** nie direkt `AsyncStorage`, immer `src/store/storage.ts`. Ein
+  eingebetteter Host kann `localStorage` verweigern; der Adapter fällt dann auf
+  den Arbeitsspeicher zurück und die App zeigt einen roten Banner, statt still
+  Daten zu verlieren.
 
 ## Tests
 

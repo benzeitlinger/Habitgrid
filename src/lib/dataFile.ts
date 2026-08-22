@@ -3,12 +3,18 @@ import { File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 import * as Sharing from 'expo-sharing';
 
+import { saveViaHost } from '@/lib/artifactHost';
+
 /**
  * Writes `contents` to a file and hands it to the OS share sheet.
  * On web there is no share sheet, so it falls back to a download.
  */
 export async function shareTextFile(filename: string, contents: string): Promise<void> {
   if (Platform.OS === 'web') {
+    // Inside the artifact viewer a plain <a download> is inert, so ask the
+    // host to save first and only fall back when there is no host.
+    if (await saveViaHost(filename, contents)) return;
+
     const url = URL.createObjectURL(new Blob([contents], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;

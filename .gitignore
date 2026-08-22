@@ -7,3 +7,4 @@ web-build/
 public/seed.json
 scripts/seed.json
 public/backup-fixture.json
+dist/

@@ -7,10 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryChips } from '@/components/CategoryChips';
 import { ChecklistRow } from '@/components/ChecklistRow';
+import { Icon } from '@/components/Icon';
 import { ScreenHeader, Wordmark } from '@/components/ScreenHeader';
 import { dayOfMonth, lastNDays, WEEKDAY_LABELS, weekday, type DateKey } from '@/lib/date';
 import { entriesFor } from '@/lib/stats';
 import { useCategories, useStore, useVisibleHabits } from '@/store/habits';
+import { persistenceAvailable } from '@/store/storage';
 import type { Habit } from '@/store/types';
 import { colors, radius } from '@/theme';
 
@@ -96,6 +98,15 @@ export default function ChecklistScreen() {
           { icon: 'ui-plus', onPress: () => router.push('/habit/new'), accessibilityLabel: 'New habit' },
         ]}
       />
+
+      {persistenceAvailable ? null : (
+        <View style={styles.warningBar}>
+          <Icon name="ui-warning" size={18} color={colors.bg} />
+          <Text style={styles.warningText}>
+            This browser is blocking storage — anything you tick is lost when the page reloads.
+          </Text>
+        </View>
+      )}
 
       <CategoryChips
         categories={categories}
@@ -240,6 +251,18 @@ function CustomValuePrompt({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
+  warningBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 16,
+    marginTop: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: radius.md,
+    backgroundColor: colors.danger,
+  },
+  warningText: { flex: 1, color: colors.bg, fontSize: 13, fontWeight: '700', lineHeight: 18 },
   rangeRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
