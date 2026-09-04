@@ -96,7 +96,10 @@ function normaliseHabit(value: unknown, index: number): Habit {
     streakGoal: isRecord(value.streakGoal)
       ? {
           count: Number(value.streakGoal.count) || 1,
-          period: value.streakGoal.period === 'month' ? 'month' : 'week',
+          period:
+            value.streakGoal.period === 'month' || value.streakGoal.period === 'day'
+              ? value.streakGoal.period
+              : 'week',
         }
       : null,
     trackingType: value.trackingType === 'custom' ? 'custom' : 'step',

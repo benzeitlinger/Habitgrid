@@ -351,10 +351,10 @@ function StreakGoalPicker({
   onChange: (goal: StreakGoal | null) => void;
 }) {
   const period = value?.period ?? 'week';
-  const counts = useMemo(
-    () => (period === 'week' ? GOAL_COUNTS : [...GOAL_COUNTS, 10, 15, 20, 25]),
-    [period]
-  );
+  const counts = useMemo(() => {
+    if (period === 'day') return [1];
+    return period === 'week' ? GOAL_COUNTS : [...GOAL_COUNTS, 10, 15, 20, 25];
+  }, [period]);
 
   return (
     <View style={{ gap: 10 }}>
@@ -390,6 +390,7 @@ function StreakGoalPicker({
           onChange={(p) => onChange({ count: value.count, period: p })}
           accent={color}
           options={[
+            { value: 'day', label: 'per Day' },
             { value: 'week', label: 'per Week' },
             { value: 'month', label: 'per Month' },
           ]}

@@ -1,6 +1,6 @@
 import {
-  completionRate, completionsPerMonth, fillRatio, goodDays, isGoodDay, streaks,
-  trackedDays,
+  checklistFillRatio, completionRate, completionsPerMonth, fillRatio, goodDays, isGoodDay,
+  streaks, trackedDays,
 } from '@/lib/stats';
 import type { Habit } from '@/store/types';
 
@@ -80,6 +80,28 @@ describe('fillRatio', () => {
     const h = habit({ polarity: 'quit', completionsPerDay: 0 });
     expect(fillRatio(h, {}, '2026-08-01')).toBe(0);
     expect(fillRatio(h, { '2026-08-01': 1 }, '2026-08-01')).toBe(1);
+  });
+});
+
+describe('checklistFillRatio', () => {
+  it('matches fillRatio exactly for build habits', () => {
+    const h = habit({ completionsPerDay: 4 });
+    const e = { '2026-08-01': 2 };
+    expect(checklistFillRatio(h, e, '2026-08-01')).toBe(fillRatio(h, e, '2026-08-01'));
+  });
+
+  it('inverts quit: clean is full, a slip empties the cell', () => {
+    const h = habit({ polarity: 'quit', completionsPerDay: 0 });
+    // The opposite of fillRatio's reading of the exact same days.
+    expect(checklistFillRatio(h, {}, '2026-08-01')).toBe(1);
+    expect(checklistFillRatio(h, { '2026-08-01': 1 }, '2026-08-01')).toBe(0);
+  });
+
+  it('keeps the partial tier for a slip still inside the allowance', () => {
+    const h = habit({ polarity: 'quit', completionsPerDay: 2 });
+    expect(checklistFillRatio(h, { '2026-08-01': 1 }, '2026-08-01')).toBe(0.45);
+    expect(checklistFillRatio(h, { '2026-08-01': 2 }, '2026-08-01')).toBe(0.45);
+    expect(checklistFillRatio(h, { '2026-08-01': 3 }, '2026-08-01')).toBe(0);
   });
 });
 

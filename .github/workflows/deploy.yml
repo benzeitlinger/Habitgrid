@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+# Every push to main: typecheck + test, then export the web build, pack it
+# into the single self-contained HTML file (scripts/bundle-single-file.mjs —
+# the same pipeline already used for the Claude Artifact build, reused as-is),
+# and publish that one file as the whole Pages site. Nothing built ever gets
+# committed to the repo; the artifact is produced fresh in CI each time.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; never cancel one that's already live-publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npx jest
+
+      - name: Export web build
+        run: npx expo export --platform web --output-dir dist
+
+      - name: Bundle into one self-contained file
+        run: |
+          mkdir -p site
+          node scripts/bundle-single-file.mjs site/index.html
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

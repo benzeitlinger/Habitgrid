@@ -2,9 +2,10 @@ import * as Haptics from 'expo-haptics';
 import React from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { FlameBurst } from '@/components/FlameBurst';
 import { Icon } from '@/components/Icon';
 import type { DateKey } from '@/lib/date';
-import { fillRatio, type HabitEntries } from '@/lib/stats';
+import { checklistFillRatio, type HabitEntries } from '@/lib/stats';
 import type { Habit } from '@/store/types';
 import { colors, fillFor, radius, withAlpha } from '@/theme';
 
@@ -17,6 +18,8 @@ type Props = {
   onResetDay: (date: DateKey) => void;
   onOpenStats: () => void;
   onEdit: () => void;
+  /** The one cell, if any, currently showing the streak-flame celebration. */
+  flameDate?: DateKey | null;
 };
 
 function tap() {
@@ -32,7 +35,7 @@ function reset() {
 }
 
 export function ChecklistRow({
-  habit, entries, days, layout, onToggleDay, onResetDay, onOpenStats, onEdit,
+  habit, entries, days, layout, onToggleDay, onResetDay, onOpenStats, onEdit, flameDate = null,
 }: Props) {
   const tint = withAlpha(habit.color, 0.14);
 
@@ -65,7 +68,7 @@ export function ChecklistRow({
       </Pressable>
 
       {days.map((date, i) => {
-        const ratio = fillRatio(habit, entries, date);
+        const ratio = checklistFillRatio(habit, entries, date);
         const count = entries[date] ?? 0;
         return (
           <Pressable
@@ -90,7 +93,9 @@ export function ChecklistRow({
               },
               pressed && styles.pressed,
             ]}
-          />
+          >
+            {flameDate === date ? <FlameBurst size={layout.cell} /> : null}
+          </Pressable>
         );
       })}
     </View>

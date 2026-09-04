@@ -1,7 +1,8 @@
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View,
+  Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,12 +10,15 @@ import { CategoryChips } from '@/components/CategoryChips';
 import { ChecklistRow } from '@/components/ChecklistRow';
 import { Icon } from '@/components/Icon';
 import { ScreenHeader, Wordmark } from '@/components/ScreenHeader';
-import { dayOfMonth, lastNDays, WEEKDAY_LABELS, weekday, type DateKey } from '@/lib/date';
-import { entriesFor } from '@/lib/stats';
+import { dayOfMonth, lastNDays, todayKey, WEEKDAY_LABELS, weekday, type DateKey } from '@/lib/date';
+import { entriesFor, streaks } from '@/lib/stats';
 import { useCategories, useStore, useVisibleHabits } from '@/store/habits';
 import { persistenceAvailable } from '@/store/storage';
 import type { Habit } from '@/store/types';
 import { colors, radius } from '@/theme';
+
+/** How long a streak-flame stays up before it clears itself. */
+const FLAME_DURATION_MS = 1000;
 
 const RANGES = [1, 3, 5, 7] as const;
 type Range = (typeof RANGES)[number];
@@ -63,6 +67,7 @@ export default function ChecklistScreen() {
   const [range, setRange] = useState<Range>(settings.defaultRangeDays);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [customTarget, setCustomTarget] = useState<{ habit: Habit; date: DateKey } | null>(null);
+  const [flame, setFlame] = useState<{ habitId: string; date: DateKey } | null>(null);
 
   const { width } = useWindowDimensions();
   const days = useMemo(() => lastNDays(range), [range]);
@@ -80,12 +85,54 @@ export default function ChecklistScreen() {
   const cycleRange = () =>
     setRange((prev) => RANGES[(RANGES.indexOf(prev) + 1) % RANGES.length]);
 
+  useEffect(() => {
+    if (!flame) return;
+    const timer = setTimeout(() => setFlame(null), FLAME_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [flame]);
+
+  /**
+   * Runs `mutate`, then checks whether it just pushed the habit's streak
+   * forward — only possible for a build habit with a streak goal, hitting
+   * today's cell (a habit with no goal has no streak to speak of; `streaks()`
+   * already returns null for that case). `entries` is read fresh from the
+   * store after the mutation, since the `entries` in this closure is only as
+   * current as the last render.
+   */
+  const mutateAndCelebrate = (habit: Habit, date: DateKey, mutate: () => void) => {
+    const eligible = date === todayKey() && habit.polarity === 'build' && habit.streakGoal != null;
+    const before = eligible
+      ? (streaks(habit, entriesFor(entries, habit.id), settings.firstDayOfWeek)?.current ?? 0)
+      : 0;
+
+    mutate();
+
+    if (!eligible) return;
+    const freshEntries = entriesFor(useStore.getState().entries, habit.id);
+    const after = streaks(habit, freshEntries, settings.firstDayOfWeek)?.current ?? 0;
+    if (after > before) {
+      setFlame({ habitId: habit.id, date });
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+    }
+  };
+
   const onToggleDay = (habit: Habit, date: DateKey) => {
     if (habit.trackingType === 'custom') {
       setCustomTarget({ habit, date });
       return;
     }
-    bump(habit.id, date, 1);
+    // A simple yes/no (or 0-allowed) habit is a toggle: tapping an already
+    // non-default cell clears it, instead of always incrementing and relying
+    // on long-press to undo. Anything above that keeps the old step/reset
+    // behaviour, since a tap can no longer stand in for "the" one value.
+    const current = entries[habit.id]?.[date] ?? 0;
+    const isToggle = habit.completionsPerDay <= 1;
+    mutateAndCelebrate(habit, date, () => {
+      if (isToggle && current > 0) setCount(habit.id, date, 0);
+      else bump(habit.id, date, 1);
+    });
   };
 
   return (
@@ -159,6 +206,7 @@ export default function ChecklistScreen() {
               onResetDay={(date) => setCount(habit.id, date, 0)}
               onOpenStats={() => router.push({ pathname: '/stats', params: { habit: habit.id } })}
               onEdit={() => router.push(`/habit/${habit.id}`)}
+              flameDate={flame?.habitId === habit.id ? flame.date : null}
             />
           ))}
         </ScrollView>
@@ -170,7 +218,9 @@ export default function ChecklistScreen() {
           current={entries[customTarget.habit.id]?.[customTarget.date] ?? 0}
           onCancel={() => setCustomTarget(null)}
           onSubmit={(value) => {
-            setCount(customTarget.habit.id, customTarget.date, value);
+            mutateAndCelebrate(customTarget.habit, customTarget.date, () => {
+              setCount(customTarget.habit.id, customTarget.date, value);
+            });
             setCustomTarget(null);
           }}
         />

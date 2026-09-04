@@ -15,9 +15,13 @@ import { join, extname } from 'node:path';
 const DIST = 'dist';
 const OUT = process.argv[2] ?? 'dist/single.html';
 const BASE_TOKEN = '/__HK_BASE__';
-// The hosted page is Ben's own build, so it is not named after the product it
-// replaces — the wordmark inside the app is unchanged.
+// The hosted page is Ben's own build, so the tab/share title is not named
+// after the product it replaces — the wordmark inside the app is unchanged.
+// The home-screen label is a private, personal shortcut, so it can just say
+// what the app is.
 const PAGE_TITLE = 'Habit Grid';
+const HOME_SCREEN_TITLE = 'HabitKit';
+const TOUCH_ICON_PATH = 'assets/touch-icon.png';
 
 const MIME = {
   '.ttf': 'font/ttf',
@@ -96,11 +100,33 @@ const BASE_SETUP = [
   '})();',
 ].join('\n');
 
+// Both the touch icon and the web manifest are embedded as data: URIs, same
+// as every font and image in the bundle — the whole point of this file is
+// that nothing it shows needs a second HTTP request.
+const touchIconData = `data:image/png;base64,${readFileSync(TOUCH_ICON_PATH).toString('base64')}`;
+
+const manifest = {
+  name: HOME_SCREEN_TITLE,
+  short_name: HOME_SCREEN_TITLE,
+  start_url: '.',
+  display: 'standalone',
+  background_color: '#000000',
+  theme_color: '#000000',
+  icons: [{ src: touchIconData, sizes: '180x180', type: 'image/png' }],
+};
+const manifestData = `data:application/manifest+json;base64,${Buffer.from(JSON.stringify(manifest)).toString('base64')}`;
+
 const html = `<title>${PAGE_TITLE}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, shrink-to-fit=no" />
+<meta name="theme-color" content="#000000" />
+<!-- iOS ignores the manifest below for "Add to Home Screen"; these are what it
+     actually reads for a full-screen, address-bar-free launch. -->
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="theme-color" content="#000000" />
+<meta name="apple-mobile-web-app-title" content="${HOME_SCREEN_TITLE}" />
+<link rel="apple-touch-icon" href="${touchIconData}" />
+<!-- Best-effort for Android/Chrome; not load-bearing for the iPhone path above. -->
+<link rel="manifest" href="${manifestData}" />
 <style>
   html, body { height: 100%; background: #000; }
   body { overflow: hidden; margin: 0; }

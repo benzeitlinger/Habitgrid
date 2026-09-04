@@ -84,6 +84,7 @@ export const ICONS: Record<string, IconDef> = {
   'ui-down': { set: 'ion', name: 'chevron-down' },
   'ui-up': { set: 'ion', name: 'chevron-up' },
   'ui-flame': { set: 'ion', name: 'flame-outline' },
+  'ui-flame-fill': { set: 'ion', name: 'flame' },
   'ui-hash': { set: 'mci', name: 'pound' },
   'ui-percent': { set: 'mci', name: 'percent-outline' },
   'ui-trend': { set: 'mci', name: 'chart-line-variant' },

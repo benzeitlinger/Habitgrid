@@ -42,6 +42,29 @@ export function fillRatio(habit: Habit, e: HabitEntries, date: DateKey): number 
   return Math.min(1, count / target);
 }
 
+/**
+ * Checklist-only fill ratio for a quit habit's cell.
+ *
+ * `fillRatio` above is shared with the year heatmap, where "mostly empty,
+ * slips stand out as colour" is the useful reading for scanning a whole
+ * year. The daily checklist wants the opposite: isGoodDay() already treats
+ * an untouched day as clean, so the cell should default to looking done
+ * (full) without any tap, and a tap that logs a slip should visibly flip it
+ * to the "bad" look (empty) — full <-> empty is the same toggle a build
+ * habit's cell already uses, just read the other way round for quit.
+ *
+ * Kept separate from fillRatio on purpose: inverting fillRatio itself would
+ * also flip every untouched day in the year heatmap to filled, which is a
+ * different screen this app doesn't touch here.
+ */
+export function checklistFillRatio(habit: Habit, e: HabitEntries, date: DateKey): number {
+  if (habit.polarity !== 'quit') return fillRatio(habit, e, date);
+  const count = countOn(e, date);
+  if (count === 0) return 1; // clean by default, nothing to tap
+  const over = count - habit.completionsPerDay;
+  return over <= 0 ? 0.45 : 0; // within the allowance -> partial; exceeded -> "bad"
+}
+
 /** Inclusive window of days a habit was actually being tracked in `y`. */
 export function trackedRange(habit: Habit, y: number): [DateKey, DateKey] | null {
   const today = todayKey();
@@ -106,7 +129,7 @@ function firstEntryOfYear(e: HabitEntries, y: number): DateKey | null {
 export function completionRate(habit: Habit, e: HabitEntries, y: number): number {
   if (habit.polarity === 'quit') {
     const tracked = trackedDays(habit, y);
-    return tracked === 0 ? 0 : Math.floor((goodDays(habit, e, y) / tracked) * 100);
+    return tracked === 0 ? 0 : Math.round((goodDays(habit, e, y) / tracked) * 100);
   }
 
   const first = firstEntryOfYear(e, y);
@@ -268,6 +291,9 @@ export function overallCompletionRate(
   let active = 0;
   let done = 0;
   for (const date of keysBetween(from, to)) {
+    // Days before any habit existed must not drag the rate down for a
+    // brand-new user — matches overallFillRatio's per-habit guard.
+    if (!habits.some((h) => h.createdAt <= date)) continue;
     active++;
     const any = habits.some((h) => {
       if (h.polarity === 'quit') return false; // a clean day is not an action
