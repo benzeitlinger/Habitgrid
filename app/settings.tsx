@@ -132,7 +132,7 @@ function Theme() {
       <ColorGrid value={settings.accent} onChange={(accent) => update({ accent })} />
       <View style={styles.preview}>
         <Text style={styles.previewWordmark}>
-          Habit<Text style={{ color: settings.accent }}>Kit</Text>
+          Habit<Text style={{ color: settings.accent }}>Grid</Text>
         </Text>
       </View>
       <Pressable

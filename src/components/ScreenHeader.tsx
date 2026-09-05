@@ -42,11 +42,11 @@ function HeaderButton({ icon, onPress, accessibilityLabel }: Action) {
   );
 }
 
-/** The wordmark: white "Habit" + accent "Kit", as in the original. */
+/** The wordmark: white "Habit" + accent "Grid". */
 export function Wordmark({ accent = colors.accent }: { accent?: string }) {
   return (
     <Text style={styles.wordmark}>
-      Habit<Text style={{ color: accent }}>Kit</Text>
+      Habit<Text style={{ color: accent }}>Grid</Text>
     </Text>
   );
 }

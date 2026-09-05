@@ -14,13 +14,9 @@ import { join, extname } from 'node:path';
 
 const DIST = 'dist';
 const OUT = process.argv[2] ?? 'dist/single.html';
-const BASE_TOKEN = '/__HK_BASE__';
-// The hosted page is Ben's own build, so the tab/share title is not named
-// after the product it replaces — the wordmark inside the app is unchanged.
-// The home-screen label is a private, personal shortcut, so it can just say
-// what the app is.
+const BASE_TOKEN = '/__HG_BASE__';
 const PAGE_TITLE = 'Habit Grid';
-const HOME_SCREEN_TITLE = 'HabitKit';
+const HOME_SCREEN_TITLE = 'Habit Grid';
 const TOUCH_ICON_PATH = 'assets/touch-icon.png';
 
 const MIME = {
@@ -75,7 +71,7 @@ const baseHits = bundle.split(literal).length - 1;
 if (baseHits === 0) {
   throw new Error(`no ${literal} found — was the app exported with experiments.baseUrl?`);
 }
-bundle = bundle.split(literal).join('window.__HK_BASE__');
+bundle = bundle.split(literal).join('window.__HG_BASE__');
 console.log(`base path: replaced ${baseHits} literal(s)`);
 
 // A literal </script> in the bundle would close the tag early.
@@ -84,7 +80,7 @@ const scriptSafe = bundle.split('</script').join('<\\/script');
 const BASE_SETUP = [
   '(function () {',
   '  // Where this page is served from, whatever path that turns out to be.',
-  '  window.__HK_BASE__ = location.pathname',
+  '  window.__HG_BASE__ = location.pathname',
   String.raw`    .replace(/\/index\.html$/, '')`,
   String.raw`    .replace(/\/+$/, '');`,
   '',

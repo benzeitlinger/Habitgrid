@@ -5,9 +5,9 @@ editor_options:
     wrap: 72
 ---
 
-# HabitKit (Eigenbau)
+# Habit Grid
 
-Ein Habit Tracker nach dem Vorbild von [HabitKit](https://www.habitkit.app/), gebaut mit Expo, damit er ohne Xcode auf dem iPhone läuft. Alle Daten liegen ausschließlich lokal auf dem Gerät.
+Ein Habit Tracker, gebaut mit Expo, damit er ohne Xcode auf dem iPhone läuft. Alle Daten liegen ausschließlich lokal auf dem Gerät. Design und Funktionsumfang sind an eine bekannte kommerzielle App angelehnt; Import unterstützt deren Export-Format (siehe „HabitKit-Import" unten) — Code, Assets und Name sind komplett eigenständig.
 
 Design-Referenz: die Screenshots in `../emulate_thsi_app/`.
 
@@ -83,7 +83,7 @@ node scripts/bundle-single-file.mjs dist/habit-grid.html
 
 Das packt den ganzen Build in **eine** HTML-Datei — Fonts und Bilder als <data:-URIs> —, die sich als Claude-Artifact veröffentlichen lässt. Zwei Dinge macht das Script dabei, ohne die es nicht funktioniert:
 
-- Der Build setzt `experiments.baseUrl` auf den Platzhalter `/__HK_BASE__`. Das Script ersetzt das Literal durch `window.__HK_BASE__`, das beim Laden aus `location.pathname` berechnet wird. Sonst wäre die Datei an genau einen Pfad gebunden — und die URL steht erst nach dem Veröffentlichen fest.
+- Der Build setzt `experiments.baseUrl` auf den Platzhalter `/__HG_BASE__`. Das Script ersetzt das Literal durch `window.__HG_BASE__`, das beim Laden aus `location.pathname` berechnet wird. Sonst wäre die Datei an genau einen Pfad gebunden — und die URL steht erst nach dem Veröffentlichen fest.
 - Es pinnt die Adresszeile. expo-router würde sonst `/settings` und `/stats` in die History schieben, und ein Reload dort liefert auf einem statischen Host einen 404.
 
 Im Artifact-Viewer sind normale Download-Links wirkungslos, deshalb geht der Export dort über die `downloads`-Capability (`src/lib/artifactHost.ts`) und fällt außerhalb auf einen normalen Link zurück.
