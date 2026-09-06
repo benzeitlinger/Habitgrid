@@ -9,14 +9,16 @@ import { DeclinedError } from '@/lib/artifactHost';
 import { backupFilename, BackupError, buildBackup } from '@/lib/backup';
 import { HabitKitImportError, parseAnyBackup } from '@/lib/import/detect';
 import { pickTextFile, shareTextFile } from '@/lib/dataFile';
-import { confirmDestructive, notify } from '@/lib/dialog';
+import { confirmDestructive, notify, promptText } from '@/lib/dialog';
 import { closeSheet } from '@/lib/nav';
-import { useArchivedHabits, useStore, useVisibleHabits } from '@/store/habits';
+import {
+  useActiveProfile, useArchivedHabits, useProfiles, useStore, useVisibleHabits,
+} from '@/store/habits';
 import { colors, HABIT_COLORS, radius, withAlpha } from '@/theme';
 import { Segmented } from '@/components/Segmented';
 import { ColorGrid } from '@/components/ColorGrid';
 
-type Page = 'root' | 'general' | 'theme' | 'archived' | 'data' | 'reorder';
+type Page = 'root' | 'general' | 'theme' | 'archived' | 'data' | 'reorder' | 'profiles';
 
 function count(n: number, noun: string): string {
   return `${n} ${noun}${n === 1 ? '' : 's'}`;
@@ -34,6 +36,7 @@ const TINTS = {
   archived: '#22D3EE',
   data: '#6366F1',
   reorder: '#F87171',
+  profiles: '#34D399',
 };
 
 export default function SettingsScreen() {
@@ -46,6 +49,7 @@ export default function SettingsScreen() {
     : page === 'theme' ? 'Theme'
     : page === 'archived' ? 'Archived Habits'
     : page === 'data' ? 'Data Import/Export'
+    : page === 'profiles' ? 'Profiles'
     : 'Reorder Habits';
 
   return (
@@ -56,6 +60,7 @@ export default function SettingsScreen() {
       {page === 'archived' ? <Archived /> : null}
       {page === 'data' ? <Data /> : null}
       {page === 'reorder' ? <Reorder /> : null}
+      {page === 'profiles' ? <Profiles /> : null}
     </Sheet>
   );
 }
@@ -63,28 +68,139 @@ export default function SettingsScreen() {
 function Root({ onNavigate }: { onNavigate: (p: Page) => void }) {
   const archived = useArchivedHabits();
   const habits = useVisibleHabits();
+  const active = useActiveProfile();
 
   return (
-    <SettingsGroup title="App">
-      <SettingsRow icon="ui-general" tint={TINTS.general} label="General" onPress={() => onNavigate('general')} />
-      <SettingsRow icon="ui-palette" tint={TINTS.theme} label="Theme" onPress={() => onNavigate('theme')} />
-      <SettingsRow
-        icon="ui-archive"
-        tint={TINTS.archived}
-        label="Archived Habits"
-        detail={String(archived.length)}
-        onPress={() => onNavigate('archived')}
-      />
-      <SettingsRow icon="ui-import" tint={TINTS.data} label="Data Import/Export" onPress={() => onNavigate('data')} />
-      <SettingsRow
-        icon="ui-reorder"
-        tint={TINTS.reorder}
-        label="Reorder Habits"
-        detail={String(habits.length)}
-        onPress={() => onNavigate('reorder')}
-        last
-      />
-    </SettingsGroup>
+    <>
+      <SettingsGroup title="Profiles">
+        <SettingsRow
+          icon="ui-person"
+          tint={TINTS.profiles}
+          label="Profiles"
+          detail={active?.name ?? ''}
+          onPress={() => onNavigate('profiles')}
+          last
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title="App">
+        <SettingsRow icon="ui-general" tint={TINTS.general} label="General" onPress={() => onNavigate('general')} />
+        <SettingsRow icon="ui-palette" tint={TINTS.theme} label="Theme" onPress={() => onNavigate('theme')} />
+        <SettingsRow
+          icon="ui-archive"
+          tint={TINTS.archived}
+          label="Archived Habits"
+          detail={String(archived.length)}
+          onPress={() => onNavigate('archived')}
+        />
+        <SettingsRow icon="ui-import" tint={TINTS.data} label="Data Import/Export" onPress={() => onNavigate('data')} />
+        <SettingsRow
+          icon="ui-reorder"
+          tint={TINTS.reorder}
+          label="Reorder Habits"
+          detail={String(habits.length)}
+          onPress={() => onNavigate('reorder')}
+          last
+        />
+      </SettingsGroup>
+    </>
+  );
+}
+
+function Profiles() {
+  const profiles = useProfiles();
+  const active = useActiveProfile();
+  const addProfile = useStore((s) => s.addProfile);
+  const switchProfile = useStore((s) => s.switchProfile);
+  const renameProfile = useStore((s) => s.renameProfile);
+  const removeProfile = useStore((s) => s.removeProfile);
+
+  const doAdd = async () => {
+    const name = await promptText('New profile', {
+      placeholder: 'e.g. Partner',
+      confirmLabel: 'Create',
+    });
+    if (!name) return;
+    const id = addProfile(name);
+    switchProfile(id);
+  };
+
+  const doRename = async (id: string, current: string) => {
+    const name = await promptText('Rename profile', { initialValue: current, confirmLabel: 'Save' });
+    if (!name || name === current) return;
+    renameProfile(id, name);
+  };
+
+  const doRemove = async (id: string, name: string) => {
+    const ok = await confirmDestructive(
+      'Delete profile?',
+      `"${name}" and all of its habits and history will be permanently removed. This cannot be undone.`,
+      'Delete'
+    );
+    if (ok) removeProfile(id);
+  };
+
+  return (
+    <View style={{ gap: 14 }}>
+      <Text style={styles.body}>
+        Profiles are separate, local data sets on this device — not accounts. There is no login and
+        nothing syncs between them.
+      </Text>
+
+      <View style={{ gap: 10 }}>
+        {profiles.map((p) => {
+          const isActive = p.id === active?.id;
+          return (
+            // A plain View, not a Pressable: the "switch" tap-area and the
+            // rename/delete buttons below are siblings, not nested buttons —
+            // a <button> inside a <button> is invalid HTML on web and makes
+            // taps on the inner ones unreliable.
+            <View key={p.id} style={[styles.habitRow, isActive && { borderColor: p.color }]}>
+              <Pressable
+                onPress={() => switchProfile(p.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Switch to ${p.name}`}
+                style={styles.profileTapArea}
+              >
+                <View style={[styles.habitIcon, { backgroundColor: withAlpha(p.color, 0.16) }]}>
+                  <Icon name="ui-person" size={20} color={p.color} />
+                </View>
+                <Text style={styles.habitName} numberOfLines={1}>{p.name}</Text>
+                {isActive ? <Icon name="ui-check" size={18} color={p.color} /> : null}
+              </Pressable>
+              <Pressable
+                onPress={() => doRename(p.id, p.name)}
+                accessibilityRole="button"
+                accessibilityLabel={`Rename ${p.name}`}
+                hitSlop={8}
+              >
+                <Icon name="ui-edit" size={20} color={colors.textPrimary} />
+              </Pressable>
+              {profiles.length > 1 ? (
+                <Pressable
+                  onPress={() => doRemove(p.id, p.name)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${p.name}`}
+                  hitSlop={8}
+                >
+                  <Icon name="ui-trash" size={20} color={colors.danger} />
+                </Pressable>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+
+      <Pressable
+        onPress={doAdd}
+        accessibilityRole="button"
+        accessibilityLabel="New profile"
+        style={styles.bigButton}
+      >
+        <Icon name="ui-plus" size={22} color={colors.textPrimary} />
+        <Text style={styles.bigButtonText}>New Profile</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -391,6 +507,7 @@ const styles = StyleSheet.create({
   },
   habitIcon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   habitName: { flex: 1, color: colors.textPrimary, fontSize: 16, fontWeight: '700' },
+  profileTapArea: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
   bigButton: {
     flexDirection: 'row',
     alignItems: 'center',

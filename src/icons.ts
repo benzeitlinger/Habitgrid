@@ -98,6 +98,8 @@ export const ICONS: Record<string, IconDef> = {
   'ui-reorder': { set: 'ion', name: 'reorder-three-outline' },
   'ui-general': { set: 'ion', name: 'options-outline' },
   'ui-check': { set: 'ion', name: 'checkmark' },
+  'ui-person': { set: 'ion', name: 'person-circle-outline' },
+  'ui-edit': { set: 'ion', name: 'pencil-outline' },
 };
 
 /** Keys offered in the habit icon picker; UI chrome is excluded. */

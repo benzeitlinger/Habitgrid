@@ -1,5 +1,5 @@
-import React from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { create } from 'zustand';
 
 import { colors, radius } from '@/theme';
@@ -101,6 +101,104 @@ export function DialogHost() {
   );
 }
 
+type PromptRequest = {
+  title: string;
+  message?: string;
+  initialValue: string;
+  placeholder?: string;
+  confirmLabel?: string;
+  resolve: (value: string | null) => void;
+};
+
+type PromptState = { request: PromptRequest | null; open: (r: PromptRequest) => void; close: () => void };
+
+const usePromptStore = create<PromptState>((set) => ({
+  request: null,
+  open: (request) => set({ request }),
+  close: () => set({ request: null }),
+}));
+
+/** A single-line text prompt, resolving to `null` on cancel. */
+export function promptText(
+  title: string,
+  options?: { message?: string; initialValue?: string; placeholder?: string; confirmLabel?: string }
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    usePromptStore.getState().open({
+      title,
+      message: options?.message,
+      initialValue: options?.initialValue ?? '',
+      placeholder: options?.placeholder,
+      confirmLabel: options?.confirmLabel,
+      resolve,
+    });
+  });
+}
+
+/** Mounted once at the root, alongside `DialogHost`. */
+export function PromptHost() {
+  const request = usePromptStore((s) => s.request);
+  const close = usePromptStore((s) => s.close);
+  const [text, setText] = useState('');
+
+  // Re-seed the input every time a *new* request opens, not on every render.
+  useEffect(() => {
+    if (request) setText(request.initialValue);
+  }, [request]);
+
+  if (!request) return null;
+
+  const finish = (value: string | null) => {
+    close();
+    request.resolve(value);
+  };
+
+  const trimmed = text.trim();
+
+  return (
+    <Modal transparent animationType="fade" onRequestClose={() => finish(null)}>
+      <Pressable style={styles.backdrop} accessibilityLabel="Dismiss dialog" onPress={() => finish(null)}>
+        <Pressable style={styles.card} onPress={() => {}}>
+          <Text style={styles.title}>{request.title}</Text>
+          {request.message ? <Text style={styles.message}>{request.message}</Text> : null}
+
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder={request.placeholder}
+            placeholderTextColor={colors.textTertiary}
+            autoFocus
+            selectTextOnFocus
+            style={styles.input}
+          />
+
+          <View style={styles.actions}>
+            <Pressable
+              onPress={() => finish(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+              style={styles.button}
+            >
+              <Text style={styles.cancel}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              disabled={trimmed.length === 0}
+              onPress={() => finish(trimmed)}
+              accessibilityRole="button"
+              accessibilityLabel={request.confirmLabel ?? 'Save'}
+              style={styles.button}
+            >
+              <Text style={[styles.confirm, trimmed.length === 0 && styles.disabled]}>
+                {request.confirmLabel ?? 'Save'}
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
@@ -126,4 +224,15 @@ const styles = StyleSheet.create({
   cancel: { color: colors.textSecondary, fontSize: 16, fontWeight: '700' },
   confirm: { color: colors.textPrimary, fontSize: 16, fontWeight: '800' },
   danger: { color: colors.danger },
+  input: {
+    backgroundColor: colors.bg,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    color: colors.textPrimary,
+    fontSize: 16,
+  },
+  disabled: { opacity: 0.4 },
 });

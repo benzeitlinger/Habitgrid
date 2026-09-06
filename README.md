@@ -54,7 +54,25 @@ npx expo start --web
 | Checklist | Hauptscreen. Kategorie-Filter, Umschalter für **1 / 3 / 5 / 7 Tage**. Bei Tagesziel 1 (bzw. Quit-Habits) ist Tap ein echtes Toggle; darüber Tap = hochzählen, Long-Press = Tag zurücksetzen. Ein Tap, der einen Streak neu erreicht, zeigt kurz eine Flamme an genau der Zelle. |
 | Statistik | Jahres-Heatmap, Completed Days, Completion Rate, Completions/Month-Chart, Current & Best Streak — gesamt und pro Habit. |
 | New / Edit Habit | Icon, Name, Beschreibung, Farbe, **Build/Quit**, Streak-Ziel (Tag/Woche/Monat), Kategorien, Tracking-Typ, Zielmenge pro Tag. |
-| Settings | General, Theme, Archived Habits, Data Import/Export, Reorder Habits. |
+| Settings | **Profiles**, General, Theme, Archived Habits, Data Import/Export, Reorder Habits. |
+
+### Profile
+
+Kein Login, kein Account, kein Sync — ein Profil ist einfach ein zweiter, komplett
+getrennter Datensatz auf demselben Gerät (eigene Habits, eigene Historie, eigene
+Kategorien und eigenes Farbschema), z. B. um dich und eine zweite Person auf einem
+Handy nebeneinander zu tracken. **Settings → Profiles**: neues Profil anlegen
+(schaltet sofort dorthin um), umbenennen, oder löschen (nur wenn mehr als eines
+existiert — das letzte Profil lässt sich nicht entfernen). Export/Import in
+Settings → Data Import/Export bezieht sich immer nur auf das gerade aktive Profil.
+
+Intern bleibt das aktive Profil in genau den Feldern (`habits`, `categories`,
+`entries`, `settings`), die es vorher schon gab — nur die *anderen* Profile liegen
+als Schnappschuss in `archive` (`src/store/habits.ts`). Ein Umschalten tauscht
+diese Felder gegen den Schnappschuss des Zielprofils. Dadurch bleibt jede
+bestehende Stelle, die `habits`/`entries`/… liest, unverändert, und ein
+Backup, das vor dieser Funktion exportiert wurde, landet beim Import unverändert
+im aktuell aktiven Profil.
 
 ### Build- und Quit-Habits
 
@@ -158,7 +176,9 @@ scripts/bundle-single-file.mjs  Web-Export -> eine portable HTML-Datei (Artifact
 npx jest
 ```
 
-Deckt `date.ts` (Zeitzonen, DST, Schaltjahr), `stats.ts` (jeder Fall einmal für Build und einmal für Quit), `backup.ts` (Round-Trip und kaputte Dateien) und den Icon-Katalog gegen die echten Glyph-Maps ab.
+Deckt `date.ts` (Zeitzonen, DST, Schaltjahr), `stats.ts` (jeder Fall einmal für Build und einmal für Quit), `backup.ts` (Round-Trip und kaputte Dateien), den Icon-Katalog gegen die echten Glyph-Maps und `store/habits.ts` (Profile bleiben beim Umschalten sauber getrennt) ab.
+
+Der Store importiert `@react-native-async-storage/async-storage`, dessen natives Modul es außerhalb einer laufenden App nicht gibt — `jest.config.js` mappt das Paket deshalb testweise auf dessen offiziellen Jest-Mock.
 
 ``` bash
 npx tsc --noEmit

@@ -62,3 +62,14 @@ export type AppData = {
   entries: Entries;
   settings: Settings;
 };
+
+/**
+ * A named, isolated local data set — not an account, no login, no sync.
+ * Lets one device hold e.g. "Ben" and "Partner" side by side.
+ */
+export type Profile = {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: DateKey;
+};
