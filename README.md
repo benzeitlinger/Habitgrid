@@ -51,7 +51,7 @@ npx expo start --web
 
 | Screen | Inhalt |
 |------------------------------------|------------------------------------|
-| Checklist | Hauptscreen. Kategorie-Filter, Umschalter für **1 / 3 / 5 / 7 Tage**. Bei Tagesziel 1 (bzw. Quit-Habits) ist Tap ein echtes Toggle; darüber Tap = hochzählen, Long-Press = Tag zurücksetzen. Ein Tap, der einen Streak neu erreicht, zeigt kurz eine Flamme an genau der Zelle. |
+| Checklist | Hauptscreen. Kategorie-Filter, Umschalter für **1 / 3 / 5 / 7 Tage**. Bei Tagesziel 1 (bzw. Quit-Habits) ist Tap ein echtes Toggle; darüber Tap = hochzählen, Long-Press = Tag zurücksetzen. Ein Tap, der einen Streak neu erreicht, zeigt kurz eine Flamme an genau der Zelle. Habits mit Tracking-Typ **Custom Value** zeigen die eingetragene Zahl direkt auf der Zelle (z. B. Liegestütze-Wiederholungen), nicht nur die Füllfarbe. |
 | Statistik | Jahres-Heatmap, Completed Days, Completion Rate, Completions/Month-Chart, Current & Best Streak — gesamt und pro Habit. |
 | New / Edit Habit | Icon, Name, Beschreibung, Farbe, **Build/Quit**, Streak-Ziel (Tag/Woche/Monat), Kategorien, Tracking-Typ, Zielmenge pro Tag. |
 | Settings | **Profiles**, General, Theme, Archived Habits, Data Import/Export, Reorder Habits. |

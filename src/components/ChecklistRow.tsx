@@ -70,6 +70,13 @@ export function ChecklistRow({
       {days.map((date, i) => {
         const ratio = checklistFillRatio(habit, entries, date);
         const count = entries[date] ?? 0;
+        // "Custom Value" habits are the ones where you type an exact number
+        // rather than just tapping to increment — so the number itself is
+        // the point (reps, minutes, pages), and belongs on the cell, not
+        // just a fill level. Always white with a dark halo, like the streak
+        // flame, so it stays legible whether the cell is barely tinted or
+        // fully filled with the habit's own colour.
+        const showCount = habit.trackingType === 'custom' && count > 0;
         return (
           <Pressable
             key={date}
@@ -94,6 +101,14 @@ export function ChecklistRow({
               pressed && styles.pressed,
             ]}
           >
+            {showCount ? (
+              <Text
+                numberOfLines={1}
+                style={[styles.count, { fontSize: Math.max(9, Math.round(layout.cell * 0.34)) }]}
+              >
+                {count}
+              </Text>
+            ) : null}
             {flameDate === date ? <FlameBurst size={layout.cell} /> : null}
           </Pressable>
         );
@@ -124,6 +139,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   name: { flexShrink: 1, color: colors.textPrimary, fontSize: 17, fontWeight: '700' },
-  cell: { borderRadius: 8 },
+  cell: { borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.6 },
+  count: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
 });
