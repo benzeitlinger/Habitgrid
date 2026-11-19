@@ -82,6 +82,16 @@ export function Settings(props: { onBack: () => void }) {
           ))}
         </div>
 
+        <div className="section-title">So entstehen die Vorschläge</div>
+        <div className="card muted" style={{ fontSize: 15 }}>
+          <ol style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
+            <li><b style={{ color: 'var(--text)' }}>Ziel gesetzt</b> (Gerät bearbeiten) → das Ziel, bis du es einmal trainiert hast.</li>
+            <li><b style={{ color: 'var(--text)' }}>2×12 geschafft</b> (keine Notiz, „sauber") → eine Stufe hoch: die Zusatzstufe, die am nächsten an 2,5 % des Gewichts liegt.</li>
+            <li><b style={{ color: 'var(--text)' }}>Wiederholungen gefehlt</b> (z. B. „2. Satz 9") → gleiches Gewicht, bis 2×12 klappt.</li>
+          </ol>
+          <p style={{ margin: '10px 0 0' }}>Nie automatisch weniger. Tippen auf die graue Zahl in der Heute-Spalte übernimmt den Vorschlag.</p>
+        </div>
+
         <div className="section-title">Hinweis</div>
         <div className="card muted" style={{ fontSize: 15 }}>
           Eine Zelle ohne Notiz bedeutet: 2×12 geschafft. Lange auf ein Gerät drücken für

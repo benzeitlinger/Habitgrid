@@ -51,6 +51,9 @@ const MAX: { device: string; date: string; max: number; suggested: number | null
   { device: 'Ruderzug', date: '2026-11-06', max: 78, suggested: null, note: 'vor den Sätzen gemessen' },
 ];
 
+/** Ziele wurden nach dem Training am 13.11. festgelegt. */
+export const TARGETS_SET_AT = '2026-11-13';
+
 export function buildSeed(): Backup {
   const devices: Device[] = [];
   const sessions: Session[] = [];
@@ -60,6 +63,7 @@ export function buildSeed(): Backup {
   const mkDevice = (plan: Plan, name: string, order: number, target: number | null = null, targetNote = ''): Device => ({
     id: `seed-${plan}-${order}`,
     plan, name, order, target, targetNote, steps: [...DEFAULT_STEPS],
+    ...(target != null ? { targetSetAt: TARGETS_SET_AT } : {}),
   });
 
   A_ROWS.forEach((r, i) => devices.push(mkDevice('A', r.name, i, r.target, r.targetNote ?? '')));
