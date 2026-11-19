@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Device } from '../lib/types';
-import { fmtKg, parseKg } from '../lib/format';
+import { fmtKg, parseKg, todayISO } from '../lib/format';
 import { deleteDevice, updateDevice } from '../lib/actions';
 import { Sheet } from './ui';
 
@@ -29,6 +29,7 @@ export function DeviceSheet(props: { device: Device | null; onClose: () => void;
     await updateDevice(d.id, {
       name: name.trim() || d.name,
       target: parseKg(target),
+      targetSetAt: parseKg(target) !== (d.target ?? null) ? todayISO() : d.targetSetAt,
       targetNote: targetNote.trim(),
       steps: [...new Set(parsed)].sort((a, b) => a - b),
     });

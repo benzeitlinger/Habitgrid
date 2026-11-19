@@ -8,6 +8,8 @@ export interface Device {
   /** Ziel-Gewicht fürs nächste Training (optional). */
   target?: number | null;
   targetNote?: string;
+  /** Wann das Ziel gesetzt wurde (YYYY-MM-DD). Gilt bis zum nächsten Training danach. */
+  targetSetAt?: string;
   /** Zusatzgewicht-Stufen (Matrix-Hebel), z. B. [0, 1.1, 2.3, 3.4, 4.5]. */
   steps: number[];
 }

@@ -226,6 +226,13 @@ thead th.today-col { background: var(--card); color: var(--text); }
   transition: transform 0.2s var(--spring);
 }
 .ph:active { transform: scale(0.94); }
+.ph.up, .ph.target { color: var(--text-2); border-color: var(--sage); border-style: solid; background: color-mix(in srgb, var(--sage-soft) 55%, transparent); }
+.ph-why { margin-top: 4px; color: var(--text-3); }
+.suggest-line {
+  font-size: 14px; color: var(--text-2); margin: -4px 0 12px;
+  padding: 8px 12px; border-radius: 12px; background: var(--card-2); border: 1px solid var(--line);
+}
+.suggest-line b { color: var(--text); font-weight: 600; }
 .table-foot {
   display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap;
   padding: 12px 16px calc(var(--sab) + 12px);

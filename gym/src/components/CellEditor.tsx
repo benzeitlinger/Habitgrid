@@ -5,6 +5,7 @@ import { addKg, fmtKg, longDate, parseKg } from '../lib/format';
 import { saveEntry, deleteEntry } from '../lib/actions';
 import { Sheet } from './ui';
 import { tick } from '../lib/haptics';
+import type { Suggestion } from '../lib/suggest';
 
 export interface CellCtx {
   plan: Plan;
@@ -14,6 +15,8 @@ export interface CellCtx {
   sessionId: string | null;
   entry: Entry | null;
   last: number | null;
+  /** Automatischer Vorschlag (nur leere Heute-Zelle). */
+  suggestion: Suggestion | null;
 }
 
 export interface CellEditorHandle { open: (ctx: CellCtx) => void }
@@ -47,7 +50,7 @@ export const CellEditor = forwardRef<CellEditorHandle, { kb: boolean; onEditStep
   const save = async () => {
     if (!ctx) return;
     let w = parseKg(val);
-    if (w == null && val.trim() === '' && ctx.last != null && !ctx.entry) w = ctx.last; // leer = wie letztes Mal
+    if (w == null && val.trim() === '' && !ctx.entry) w = ctx.suggestion?.weight ?? ctx.last; // leer = Vorschlag
     if (w == null && !note.trim()) {
       if (ctx.sessionId && ctx.entry) await deleteEntry(ctx.sessionId, ctx.device.id);
     } else {
@@ -62,7 +65,7 @@ export const CellEditor = forwardRef<CellEditorHandle, { kb: boolean; onEditStep
     close();
   };
 
-  const current = parseKg(val);
+  const current = parseKg(val) ?? (val.trim() === '' && !ctx?.entry ? ctx?.suggestion?.weight ?? null : null);
   const steps = ctx?.device.steps ?? [];
 
   return (
@@ -71,8 +74,12 @@ export const CellEditor = forwardRef<CellEditorHandle, { kb: boolean; onEditStep
       <div className="subtitle">
         {ctx ? (ctx.isToday ? `Heute · ${longDate(ctx.date)}` : longDate(ctx.date)) : ''}
         {ctx?.last != null && ` · letztes Mal ${fmtKg(ctx.last)} kg`}
-        {ctx?.device.target != null && ` · Ziel ${fmtKg(ctx.device.target)}${ctx.device.targetNote ? ` (${ctx.device.targetNote})` : ''}`}
       </div>
+      {ctx?.suggestion && (
+        <div className="suggest-line">
+          Vorschlag <b className="num">{fmtKg(ctx.suggestion.weight)} kg</b> · {ctx.suggestion.reason}
+        </div>
+      )}
       <div className="field bignum-row">
         <input
           ref={inputRef}
@@ -81,7 +88,7 @@ export const CellEditor = forwardRef<CellEditorHandle, { kb: boolean; onEditStep
           inputMode="decimal"
           enterKeyHint="done"
           autoComplete="off"
-          placeholder={ctx?.last != null ? fmtKg(ctx.last) : '0'}
+          placeholder={ctx?.suggestion ? fmtKg(ctx.suggestion.weight) : ctx?.last != null ? fmtKg(ctx.last) : '0'}
           value={val}
           onChange={(e) => setVal(e.target.value.replace(/[^0-9.,]/g, ''))}
           onKeyDown={(e) => { if (e.key === 'Enter') save(); }}

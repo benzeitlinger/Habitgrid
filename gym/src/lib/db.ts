@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { Backup, Device, Entry, MaxTest, Session } from './types';
-import { buildSeed } from './seed';
+import { buildSeed, TARGETS_SET_AT } from './seed';
 
 export class GymDB extends Dexie {
   devices!: EntityTable<Device, 'id'>;
@@ -16,6 +16,12 @@ export class GymDB extends Dexie {
       entries: 'id, sessionId, deviceId, &[sessionId+deviceId]',
       maxTests: 'id, deviceId, date',
     });
+    // v2: Ziele bekommen ein Datum (für automatische Vorschläge).
+    this.version(2).stores({}).upgrade((tx) =>
+      tx.table('devices').toCollection().modify((d: Device) => {
+        if (d.target != null && !d.targetSetAt) d.targetSetAt = TARGETS_SET_AT;
+      }),
+    );
     // Erststart: Startdaten aus der Notes-Tabelle einspielen.
     this.on('populate', (tx) => {
       const s = buildSeed();
