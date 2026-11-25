@@ -6,11 +6,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 // (GitHub Pages serves it under /<repo>/gym/).
 export default defineConfig({
   base: './',
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      injectRegister: false,
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Gym',

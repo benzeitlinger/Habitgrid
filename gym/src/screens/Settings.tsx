@@ -92,6 +92,11 @@ export function Settings(props: { onBack: () => void }) {
           <p style={{ margin: '10px 0 0' }}>Nie automatisch weniger. Tippen auf die graue Zahl in der Heute-Spalte übernimmt den Vorschlag.</p>
         </div>
 
+        <div className="section-title">Version</div>
+        <div className="card muted num" style={{ fontSize: 15 }}>
+          Stand {new Date(__BUILD_TIME__).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+        </div>
+
         <div className="section-title">Hinweis</div>
         <div className="card muted" style={{ fontSize: 15 }}>
           Eine Zelle ohne Notiz bedeutet: 2×12 geschafft. Lange auf ein Gerät drücken für
