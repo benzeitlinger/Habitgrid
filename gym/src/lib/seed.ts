@@ -13,7 +13,7 @@ const A_DATES = [
   '2026-11-02', '2026-11-05', '2026-11-06', '2026-11-13',
 ];
 
-const A_ROWS: { name: string; cells: Cell[]; target: number; targetNote?: string }[] = [
+const A_ROWS: { name: string; cells: Cell[]; target?: number | null; targetNote?: string }[] = [
   {
     name: 'Brustpresse', target: 46,
     cells: [36, 39, [42, '2. Satz nur 10'], [42, '1. Satz 8, 2. Satz 7'], 41, 43.2, 43.2, 43.2],
