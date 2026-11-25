@@ -9,6 +9,7 @@ import { DeviceSheet } from '../components/DeviceSheet';
 import { MaxSheet, type MaxTarget } from '../components/MaxSheet';
 import { Icon, MenuSheet, Sheet, TopBar, toast, useLongPress } from '../components/ui';
 import { tick } from '../lib/haptics';
+import { suggest, targetActive } from '../lib/suggest';
 
 interface Props {
   data: Data;
@@ -52,7 +53,8 @@ export function TableScreen({ data, plan, kb, onBack, onHistory }: Props) {
   const openCell = (d: Device, c: Column) => {
     const entry = c.session ? em.get(`${c.session.id}|${d.id}`) ?? null : null;
     const last = lastWeightBefore(data, d.id, c.date)?.weight ?? null;
-    editor.current?.open({ plan, device: d, date: c.date, isToday: c.isToday, sessionId: c.session?.id ?? null, entry, last });
+    const suggestion = c.isToday && !entry ? suggest(data, d, c.date) : null;
+    editor.current?.open({ plan, device: d, date: c.date, isToday: c.isToday, sessionId: c.session?.id ?? null, entry, last, suggestion });
   };
 
   const adopt = async (d: Device, c: Column, w: number) => {
@@ -89,12 +91,14 @@ export function TableScreen({ data, plan, kb, onBack, onHistory }: Props) {
                 <DeviceHeader
                   device={d}
                   hasMax={!!latestMax(data, d.id)}
+                  targetOpen={targetActive(data, d, today)}
                   onMenu={() => setDevMenu(d)}
                   onMax={() => setMaxInfo(d)}
                 />
                 {cols.map((c) => {
                   const e = c.session ? em.get(`${c.session.id}|${d.id}`) : undefined;
                   const prev = lastWeightBefore(data, d.id, c.date)?.weight ?? null;
+                  const sg = c.isToday && !e ? suggest(data, d, c.date) : null;
                   return (
                     <td key={c.session?.id ?? 'today'} className={c.isToday ? 'today-col' : ''}>
                       <div className="cell noselect" role="button" onClick={() => openCell(d, c)}>
@@ -111,14 +115,19 @@ export function TableScreen({ data, plan, kb, onBack, onHistory }: Props) {
                           </>
                         ) : e?.note ? (
                           <span className="n">{e.note}</span>
-                        ) : c.isToday && prev != null ? (
-                          <button
-                            className="ph num"
-                            aria-label={`${fmtKg(prev)} kg übernehmen`}
-                            onClick={(ev) => { ev.stopPropagation(); adopt(d, c, prev); }}
-                          >
-                            {fmtKg(prev)}
-                          </button>
+                        ) : sg ? (
+                          <>
+                            <button
+                              className={`ph num ${sg.kind}`}
+                              aria-label={`Vorschlag ${fmtKg(sg.weight)} kg übernehmen`}
+                              onClick={(ev) => { ev.stopPropagation(); adopt(d, c, sg.weight); }}
+                            >
+                              {fmtKg(sg.weight)}
+                            </button>
+                            <span className="d num ph-why">
+                              {sg.kind === 'hold' ? '= wie zuletzt' : sg.weight > sg.last ? `↑ ${fmtKg(Math.round((sg.weight - sg.last) * 100) / 100)}` : sg.kind === 'target' ? 'Ziel' : ''}
+                            </span>
+                          </>
                         ) : null}
                       </div>
                     </td>
@@ -236,7 +245,7 @@ export function TableScreen({ data, plan, kb, onBack, onHistory }: Props) {
   );
 }
 
-function DeviceHeader(props: { device: Device; hasMax: boolean; onMenu: () => void; onMax: () => void }) {
+function DeviceHeader(props: { device: Device; hasMax: boolean; targetOpen: boolean; onMenu: () => void; onMax: () => void }) {
   const lp = useLongPress(() => { tick(); props.onMenu(); }, props.onMenu);
   const d = props.device;
   return (
@@ -256,7 +265,7 @@ function DeviceHeader(props: { device: Device; hasMax: boolean; onMenu: () => vo
             </span>
           )}
         </span>
-        {d.target != null && (
+        {d.target != null && props.targetOpen && (
           <div className="target num">Ziel: {fmtKg(d.target)}{d.targetNote ? ` · ${d.targetNote}` : ''}</div>
         )}
       </div>
