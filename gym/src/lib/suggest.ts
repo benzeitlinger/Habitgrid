@@ -57,6 +57,7 @@ export function increaseStep(device: Device, weight: number): number {
 }
 
 /** Ist das Ziel noch offen (seit dem Setzen kein Training dieses Geräts)? */
+/** `date` exklusiv: Einträge an diesem Tag zählen nicht. Für „bis inkl. heute“ den Folgetag übergeben. */
 export function targetActive(data: Data, device: Device, date: string): boolean {
   if (device.target == null) return false;
   const since = device.targetSetAt ?? '';

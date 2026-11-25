@@ -91,7 +91,7 @@ export function TableScreen({ data, plan, kb, onBack, onHistory }: Props) {
                 <DeviceHeader
                   device={d}
                   hasMax={!!latestMax(data, d.id)}
-                  targetOpen={targetActive(data, d, today)}
+                  targetOpen={targetActive(data, d, today + '~')}
                   onMenu={() => setDevMenu(d)}
                   onMax={() => setMaxInfo(d)}
                 />
