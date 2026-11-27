@@ -14,8 +14,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Gym',
-        short_name: 'Gym',
+        name: process.env.VITE_APP_NAME ?? 'Gym',
+        short_name: process.env.VITE_APP_NAME ?? 'Gym',
         lang: 'de',
         description: 'Gewichte-Tabelle fürs Gym',
         display: 'standalone',

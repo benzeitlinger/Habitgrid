@@ -59,6 +59,18 @@ jobs:
       - name: Add gym app to the site
         run: cp -r gym/dist site/gym
 
+      # Zweite Kopie für Bens Freundin: eigene Startdaten, eigene Datenbank, eigener Link (<pages-url>/gym2/)
+      - name: Build gym app (second person)
+        working-directory: gym
+        env:
+          VITE_PROFILE: partner
+          VITE_DB_NAME: gym-partner
+          VITE_APP_NAME: Gym
+        run: npx vite build --outDir dist-partner
+
+      - name: Add second gym app to the site
+        run: cp -r gym/dist-partner site/gym2
+
       - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5
