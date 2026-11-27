@@ -76,7 +76,7 @@ export const PROFILES: Record<string, SeedProfile> = {
       { name: 'Trizeps', cells: [27] },
       { name: 'Latzug', cells: [27] },
     ],
-    bRows: ['Beinstrecker', 'Brustpresse', 'Schulterpresse', 'Adduktoren', 'Bizeps', 'Rückenstrecker'],
+    bRows: ['Beinstrecker', 'Brustpresse', 'Schulterpresse', 'Adduktoren', 'Bizeps', 'Rückenstrecker', 'Bauchmaschine'],
     max: [],
     targetsSetAt: '2026-11-27',
   },
