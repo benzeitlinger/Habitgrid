@@ -54,7 +54,39 @@ const MAX: { device: string; date: string; max: number; suggested: number | null
 /** Ziele wurden nach dem Training am 13.11. festgelegt. */
 export const TARGETS_SET_AT = '2026-11-13';
 
-export function buildSeed(): Backup {
+type Row = { name: string; cells: Cell[]; target?: number | null; targetNote?: string };
+type MaxRow = { device: string; date: string; max: number; suggested: number | null; note: string };
+export interface SeedProfile { aDates: string[]; aRows: Row[]; bRows: string[]; max: MaxRow[]; targetsSetAt: string }
+
+export const PROFILES: Record<string, SeedProfile> = {
+  /** Ben */
+  ben: { aDates: A_DATES, aRows: A_ROWS, bRows: B_ROWS, max: MAX, targetsSetAt: TARGETS_SET_AT },
+  /**
+   * Bens Freundin (Anfängerin). Erstes Tag-A-Training aus ihrer Notiz, ohne Notizen = 2×12.
+   * Tag B ist ein Vorschlag, der Tag A ergänzt (Brust, Schultern, Beinvorderseite, Adduktoren,
+   * Bizeps, unterer Rücken). Startgewichte sucht sie beim ersten Mal selbst.
+   */
+  partner: {
+    aDates: ['2026-11-27'],
+    aRows: [
+      { name: 'Beinbeuger', cells: [11] },
+      { name: 'Beinpresse', cells: [101] },
+      { name: 'Ruderzug', cells: [21] },
+      { name: 'Abduktoren', cells: [19] },
+      { name: 'Trizeps', cells: [27] },
+      { name: 'Latzug', cells: [27] },
+    ],
+    bRows: ['Beinstrecker', 'Brustpresse', 'Schulterpresse', 'Adduktoren', 'Bizeps', 'Rückenstrecker'],
+    max: [],
+    targetsSetAt: '2026-11-27',
+  },
+};
+
+export const SEED_PROFILE: string = (import.meta.env?.VITE_PROFILE as string | undefined) ?? 'ben';
+
+export function buildSeed(profile: string = SEED_PROFILE): Backup {
+  const P = PROFILES[profile] ?? PROFILES.ben;
+  const A_DATES = P.aDates, A_ROWS = P.aRows, B_ROWS = P.bRows, MAX = P.max, TARGETS_SET_AT = P.targetsSetAt;
   const devices: Device[] = [];
   const sessions: Session[] = [];
   const entries: Entry[] = [];

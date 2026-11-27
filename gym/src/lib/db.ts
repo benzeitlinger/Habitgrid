@@ -8,7 +8,7 @@ export class GymDB extends Dexie {
   entries!: EntityTable<Entry, 'id'>;
   maxTests!: EntityTable<MaxTest, 'id'>;
 
-  constructor(name = 'gym') {
+  constructor(name: string = (import.meta.env?.VITE_DB_NAME as string | undefined) ?? 'gym') {
     super(name);
     this.version(1).stores({
       devices: 'id, plan, order',
