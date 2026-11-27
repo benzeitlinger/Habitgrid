@@ -64,7 +64,7 @@ export const PROFILES: Record<string, SeedProfile> = {
   /**
    * Bens Freundin (Anfängerin). Erstes Tag-A-Training aus ihrer Notiz, ohne Notizen = 2×12.
    * Tag B ist ein Vorschlag, der Tag A ergänzt (Brust, Schultern, Beinvorderseite, Adduktoren,
-   * Bizeps, unterer Rücken). Startgewichte sucht sie beim ersten Mal selbst.
+   * unterer Rücken, Bauch). Startgewichte sucht sie beim ersten Mal selbst.
    */
   partner: {
     aDates: ['2026-11-27'],
@@ -76,7 +76,7 @@ export const PROFILES: Record<string, SeedProfile> = {
       { name: 'Trizeps', cells: [27] },
       { name: 'Latzug', cells: [27] },
     ],
-    bRows: ['Beinstrecker', 'Brustpresse', 'Schulterpresse', 'Adduktoren', 'Bizeps', 'Rückenstrecker', 'Bauchmaschine'],
+    bRows: ['Beinstrecker', 'Brustpresse', 'Schulterpresse', 'Adduktoren', 'Rückenstrecker', 'Bauchmaschine'],
     max: [],
     targetsSetAt: '2026-11-27',
   },

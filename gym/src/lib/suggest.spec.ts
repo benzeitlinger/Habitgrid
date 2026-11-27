@@ -54,7 +54,7 @@ describe('Profil Freundin', () => {
   it('Startdaten und erste Vorschläge', () => {
     const d = buildSeed('partner');
     expect(devicesOf(d, 'A').map((x) => x.name)).toEqual(['Beinbeuger', 'Beinpresse', 'Ruderzug', 'Abduktoren', 'Trizeps', 'Latzug']);
-    expect(devicesOf(d, 'B')).toHaveLength(7);
+    expect(devicesOf(d, 'B').map((x) => x.name)).toEqual(['Beinstrecker', 'Brustpresse', 'Schulterpresse', 'Adduktoren', 'Rückenstrecker', 'Bauchmaschine']);
     expect(d.entries.map((e) => e.weight)).toEqual([11, 101, 21, 19, 27, 27]);
     const s = (n: string) => suggest(d, dev(d, n), '2026-12-01')!;
     expect(s('Beinpresse')).toMatchObject({ weight: 103.3, kind: 'up' }); // 2,5 % = 2,5 → +2,3
